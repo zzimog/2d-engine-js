@@ -18,10 +18,15 @@ class Engine {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
 
+    if (this.ctx === null) {
+      throw new Error('Cannot get 2D context from canvas.');
+    }
+
     this.fps = options.FPS;
 
     this.canvas.width = options.VIEWPORT_WIDTH;
     this.canvas.height = options.VIEWPORT_HEIGHT;
+    this.canvas.style.cursor = 'none';
   }
 
   resize(width: number, height: number) {

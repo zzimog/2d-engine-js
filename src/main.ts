@@ -1,13 +1,14 @@
 import Engine from './Engine';
-import loadImage from './loadImage';
+import loadImage from './utils/loadImage';
+import getCursor from './utils/getCursor';
 
-const canvas = document.getElementById('mainframe')! as HTMLCanvasElement;
+const canvas = document.getElementById('mainframe')!;
 const img = await loadImage('./scream.jpg');
 
-const engine = new Engine(canvas, {
+const engine = new Engine(canvas! as HTMLCanvasElement, {
   VIEWPORT_WIDTH: window.innerWidth,
   VIEWPORT_HEIGHT: window.innerHeight,
-  FPS: 60,
+  FPS: 75,
 });
 
 const MovingObj = {
@@ -29,6 +30,8 @@ const MovingObj = {
   },
 };
 
+const Cursor = getCursor(canvas);
+
 engine.render(
   (
     ctx: any,
@@ -41,13 +44,18 @@ engine.render(
     MovingObj.draw(ctx, viewport);
 
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, 93, 24);
+    ctx.fillRect(0, 0, 122, 24);
 
     ctx.fillStyle = 'yellow';
     ctx.font = '24px Consolas, monospace, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(`FPS: ${currentFrame}`, 0, 0);
+    ctx.fillText(`Frame: ${currentFrame}`, 0, 0);
+
+    if (Cursor.x && Cursor.y) {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(Cursor.x - 5, Cursor.y - 5, 10, 10);
+    }
   }
 );
 
