@@ -2,7 +2,7 @@ import Engine from './Engine.js';
 import loadImage from './loadImage.js';
 
 const canvas = document.getElementById('mainframe');
-const img = await loadImage('./scream.jpg');
+const img = await loadImage('assets/scream.jpg');
 
 const engine = new Engine(canvas, {
   VIEWPORT_WIDTH: window.innerWidth,
