@@ -8,6 +8,7 @@ export type EngineRenderInfo = {
 const DEFAULT_OPTIONS = {
   VIEWPORT_WIDTH: 1280,
   VIEWPORT_HEIGHT: 720,
+  VSYNC: false,
   FPS: 60,
   HIDE_CURSOR: false,
 };
@@ -71,12 +72,17 @@ class Engine {
         currentFrame: frameCount,
       } as EngineRenderInfo);
 
-      requestAnimationFrame(loop);
       frameCount++;
 
-      if (fpsTimer.interval >= 1000) {
+      if (fpsTimer.interval > 1000) {
         fps = (frameCount / fpsTimer.delta()) * 1000;
         frameCount = 0;
+      }
+
+      if (this.options.VSYNC) {
+        requestAnimationFrame(loop);
+      } else {
+        setTimeout(loop, 1000 / this.options.FPS);
       }
     };
 

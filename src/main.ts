@@ -11,6 +11,7 @@ const Cursor = useCursor(canvas);
 const engine = new Engine(canvas, {
   VIEWPORT_WIDTH: window.innerWidth,
   VIEWPORT_HEIGHT: window.innerHeight,
+  VSYNC: true,
   FPS: 75,
   HIDE_CURSOR: true,
 });
