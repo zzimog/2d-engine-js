@@ -1,3 +1,17 @@
+import useClock from './utils/useClock';
+
+type DrawCallback = (
+  ctx: Context2D,
+  obj: {
+    fps: string;
+    currentFrame: number;
+    viewport: {
+      width: number;
+      height: number;
+    };
+  }
+) => void;
+
 const DEFAULT_OPTIONS = {
   VIEWPORT_WIDTH: 1280,
   VIEWPORT_HEIGHT: 720,
@@ -38,35 +52,32 @@ class Engine {
     this.canvas.height = height;
   }
 
-  render(callback: Function) {
-    const tolerance = 0.1;
-    const interval = 1000 / this.fps + tolerance;
+  render(callback: DrawCallback) {
+    const fpsTimer = useClock();
 
-    let then = performance.now();
-    let currentFrame = 0;
+    let fps = 0;
+    let frameCount = 0;
 
-    // Arrow function is required
+    if (!this.ctx) {
+      return;
+    }
+
     const loop = () => {
-      const now = performance.now();
-      const delta = now - then;
+      callback(this.ctx!, {
+        fps: fps.toFixed(2),
+        currentFrame: frameCount,
+        viewport: {
+          width: this.canvas.width,
+          height: this.canvas.height,
+        },
+      });
 
       requestAnimationFrame(loop);
+      frameCount++;
 
-      if (delta >= interval) {
-        callback(this.ctx, {
-          currentFrame,
-          viewport: {
-            width: this.canvas.width,
-            height: this.canvas.height,
-          },
-        });
-
-        then = now - (delta % interval);
-        currentFrame++;
-
-        if (currentFrame == this.fps) {
-          currentFrame = 0;
-        }
+      if (fpsTimer.interval >= 1000) {
+        fps = (frameCount / fpsTimer.delta()) * 1000;
+        frameCount = 0;
       }
     };
 

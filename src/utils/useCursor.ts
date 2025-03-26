@@ -6,7 +6,7 @@ type CursorPosition = {
 
 type CursorTarget = HTMLElement | Window;
 
-function getCursor(target: CursorTarget = window) {
+function useCursor(target: CursorTarget = window) {
   const position: CursorPosition = {
     x: 0,
     y: 0,
@@ -30,4 +30,4 @@ function getCursor(target: CursorTarget = window) {
   return position;
 }
 
-export default getCursor;
+export default useCursor;
