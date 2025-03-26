@@ -1,16 +1,9 @@
 import useClock from './utils/useClock';
 
-type DrawCallback = (
-  ctx: Context2D,
-  obj: {
-    fps: string;
-    currentFrame: number;
-    viewport: {
-      width: number;
-      height: number;
-    };
-  }
-) => void;
+export type EngineRenderInfo = {
+  fps: string;
+  currentFrame: number;
+};
 
 const DEFAULT_OPTIONS = {
   VIEWPORT_WIDTH: 1280,
@@ -20,8 +13,9 @@ const DEFAULT_OPTIONS = {
 };
 
 class Engine {
+  options: typeof DEFAULT_OPTIONS;
   canvas: HTMLCanvasElement;
-  ctx: Context2D | null;
+  ctx: Context2D;
   fps: number;
 
   constructor(canvas: HTMLCanvasElement, opts = {}) {
@@ -30,19 +24,26 @@ class Engine {
       ...opts,
     };
 
+    this.options = options;
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
 
-    if (this.ctx === null) {
+    const ctx = canvas.getContext('2d');
+
+    if (ctx === null) {
       throw new Error('Cannot get 2D context from canvas.');
     }
 
+    this.ctx = ctx;
     this.fps = options.FPS;
 
-    this.canvas.width = options.VIEWPORT_WIDTH;
-    this.canvas.height = options.VIEWPORT_HEIGHT;
+    this.setup();
+  }
 
-    if (options.HIDE_CURSOR) {
+  setup() {
+    this.canvas.width = this.options.VIEWPORT_WIDTH;
+    this.canvas.height = this.options.VIEWPORT_HEIGHT;
+
+    if (this.options.HIDE_CURSOR) {
       this.canvas.style.cursor = 'none';
     }
   }
@@ -52,25 +53,23 @@ class Engine {
     this.canvas.height = height;
   }
 
-  render(callback: DrawCallback) {
+  render(callback: (renderInfo: EngineRenderInfo) => void) {
     const fpsTimer = useClock();
 
     let fps = 0;
     let frameCount = 0;
 
-    if (!this.ctx) {
-      return;
-    }
+    // disable images scaling antialiasing
+    this.ctx.imageSmoothingEnabled = false;
 
     const loop = () => {
-      callback(this.ctx!, {
+      // clear the screen before every render
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      callback({
         fps: fps.toFixed(2),
         currentFrame: frameCount,
-        viewport: {
-          width: this.canvas.width,
-          height: this.canvas.height,
-        },
-      });
+      } as EngineRenderInfo);
 
       requestAnimationFrame(loop);
       frameCount++;

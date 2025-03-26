@@ -1,10 +1,15 @@
+import Engine from '../Engine';
+
 class Entity {
+  engine: Engine;
   position?: Point;
   size: Size;
   color: string;
   visible: boolean;
 
-  constructor() {
+  constructor(engine: Engine) {
+    this.engine = engine;
+
     this.size = {
       width: 0,
       height: 0,
@@ -36,7 +41,9 @@ class Entity {
     return this;
   }
 
-  draw(ctx: Context2D) {
+  draw() {
+    const ctx = this.engine.ctx;
+
     if (!this.visible || !this.position) {
       return;
     }
