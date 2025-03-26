@@ -1,14 +1,16 @@
 type CursorPosition = {
-  x: number | null;
-  y: number | null;
+  x: number;
+  y: number;
+  active: boolean;
 };
 
 type CursorTarget = HTMLElement | Window;
 
 function getCursor(target: CursorTarget = window) {
   const position: CursorPosition = {
-    x: null,
-    y: null,
+    x: 0,
+    y: 0,
+    active: false,
   };
 
   target.addEventListener('mousemove', (event: Event) => {
@@ -17,12 +19,12 @@ function getCursor(target: CursorTarget = window) {
 
       position.x = clientX;
       position.y = clientY;
+      position.active = true;
     }
   });
 
   target.addEventListener('mouseleave', () => {
-    position.x = null;
-    position.y = null;
+    position.active = false;
   });
 
   return position;

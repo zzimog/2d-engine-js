@@ -1,17 +1,18 @@
-const DEFAULT = {
+const DEFAULT_OPTIONS = {
   VIEWPORT_WIDTH: 1280,
   VIEWPORT_HEIGHT: 720,
   FPS: 60,
+  HIDE_CURSOR: false,
 };
 
 class Engine {
   canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D | null;
+  ctx: Context2D | null;
   fps: number;
 
   constructor(canvas: HTMLCanvasElement, opts = {}) {
     const options = {
-      ...DEFAULT,
+      ...DEFAULT_OPTIONS,
       ...opts,
     };
 
@@ -26,7 +27,10 @@ class Engine {
 
     this.canvas.width = options.VIEWPORT_WIDTH;
     this.canvas.height = options.VIEWPORT_HEIGHT;
-    this.canvas.style.cursor = 'none';
+
+    if (options.HIDE_CURSOR) {
+      this.canvas.style.cursor = 'none';
+    }
   }
 
   resize(width: number, height: number) {
@@ -35,19 +39,20 @@ class Engine {
   }
 
   render(callback: Function) {
-    const interval = 1000 / this.fps;
     const tolerance = 0.1;
+    const interval = 1000 / this.fps + tolerance;
 
     let then = performance.now();
     let currentFrame = 0;
 
+    // Arrow function is required
     const loop = () => {
       const now = performance.now();
       const delta = now - then;
 
       requestAnimationFrame(loop);
 
-      if (delta >= interval + tolerance) {
+      if (delta >= interval) {
         callback(this.ctx, {
           currentFrame,
           viewport: {

@@ -1,5 +1,5 @@
 function loadImage(url: string) {
-  return new Promise((Resolve) => {
+  return new Promise<HTMLImageElement>((Resolve) => {
     const image = new Image();
 
     image.onload = () => {
