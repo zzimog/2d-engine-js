@@ -25,10 +25,14 @@ const entityRect = new Entity(engine)
   .setSize(300, 150)
   .setPosition(600, 300);
 
+const entityMouseFollower = new Entity(engine).setColor('red').setSize(50, 50);
+
 engine.render((renderInfo: EngineRenderInfo) => {
   const { fps, currentFrame } = renderInfo;
 
   entityRect.draw();
+
+  entityMouseFollower.draw();
 
   entityFrameMeter.update(fps, currentFrame);
   entityFrameMeter.draw();
@@ -90,5 +94,36 @@ window.addEventListener('click', (event: Event) => {
 
       entityRect.setColor(`rgb(${r}, ${g}, ${b})`);
     }
+  }
+});
+
+/**
+ * @experimental
+ * move entityMouseFollower on mousemove event
+ */
+window.addEventListener('mousemove', (event: Event) => {
+  if (event instanceof MouseEvent) {
+    const { size } = entityMouseFollower;
+
+    const newPosition = {
+      x: Cursor.x - size.width / 2,
+      y: Cursor.y - size.height / 2,
+    };
+
+    const source = {
+      x1: newPosition!.x,
+      x2: newPosition!.x + size.width,
+      y1: newPosition!.y,
+      y2: newPosition!.y + size.height,
+    };
+
+    const target = {
+      x1: entityRect.position!.x,
+      x2: entityRect.position!.x + entityRect.size.width,
+      y1: entityRect.position!.y,
+      y2: entityRect.position!.y + entityRect.size.height,
+    };
+
+    entityMouseFollower.setPosition(newPosition.x, newPosition.y);
   }
 });
