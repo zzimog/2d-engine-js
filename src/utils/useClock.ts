@@ -8,7 +8,7 @@ function useClock() {
      */
     get total() {
       const now = performance.now();
-      return startTime - now;
+      return now - startTime;
     },
 
     /**
