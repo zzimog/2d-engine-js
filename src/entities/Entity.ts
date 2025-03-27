@@ -2,23 +2,24 @@ import Engine from '../Engine';
 
 class Entity {
   engine: Engine;
-  position: Point;
+  position: Position;
   size: Size;
   color: string;
-  visible: boolean;
 
   constructor(engine: Engine) {
     this.engine = engine;
-
-    this.position = { x: 0, y: 0 };
 
     this.size = {
       width: 0,
       height: 0,
     };
 
+    this.position = {
+      x: 0,
+      y: 0,
+    };
+
     this.color = 'transparent';
-    this.visible = true;
 
     console.log('Entity initialized.');
   }
@@ -45,26 +46,43 @@ class Entity {
     return this;
   }
 
-  getPosition() {
-    return this.position;
-  }
-
   setColor(color: string) {
     this.color = color;
     return this;
   }
 
-  setVisible(visible: boolean) {
-    this.visible = visible;
-    return this;
+  get projections() {
+    const { x, y } = this.position;
+    const { width, height } = this.size;
+
+    return {
+      x1: x,
+      x2: x + width,
+      y1: y,
+      y2: y + height,
+    };
+  }
+
+  collideX(target: Entity) {
+    const h1 = this.projections;
+    const h2 = target.projections;
+
+    return h1.x1 < h2.x2 && h1.x2 > h2.x1;
+  }
+
+  collideY(target: Entity) {
+    const h1 = this.projections;
+    const h2 = target.projections;
+
+    return h1.y2 > h2.y1 && h1.y1 < h2.y2;
+  }
+
+  collide(target: Entity) {
+    return this.collideX(target) && this.collideY(target);
   }
 
   draw() {
     const ctx = this.engine.ctx;
-
-    if (!this.visible || !this.position) {
-      return;
-    }
 
     ctx.fillStyle = this.color;
 
@@ -81,17 +99,12 @@ class Entity {
    * check if given point is inside Entity area
    */
   isInBound(point: Point) {
-    if (
-      !this.position ||
-      point.x < this.position.x ||
-      point.x >= this.position.x + this.size.width ||
-      point.y < this.position.y ||
-      point.y >= this.position.y + this.size.height
-    ) {
-      return false;
-    }
-
-    return true;
+    return (
+      point.x >= this.position.x &&
+      point.x < this.position.x + this.size.width &&
+      point.y >= this.position.y &&
+      point.y < this.position.y + this.size.height
+    );
   }
 }
 

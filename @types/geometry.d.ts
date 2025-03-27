@@ -3,6 +3,8 @@ type Point = {
   y: number;
 };
 
+type Position = Point;
+
 type Size = {
   width: number;
   height: number;

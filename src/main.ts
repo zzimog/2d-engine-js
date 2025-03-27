@@ -61,16 +61,12 @@ window.addEventListener('resize', () => {
  */
 window.addEventListener('keydown', (event: Event) => {
   if (event instanceof KeyboardEvent) {
-    const { code, repeat } = event;
+    const TARGET = entityMouseFollower;
     const SPEED = 10;
 
-    console.log(code, repeat);
+    const previousPosition = { ...TARGET.position };
+    const nextPosition = { ...TARGET.position };
 
-    if (!entityRect.position) {
-      return;
-    }
-
-    const nextPosition = { ...entityRect.position };
     const directions: Record<string, Function> = {
       ArrowUp: () => (nextPosition.y += -1 * SPEED),
       ArrowLeft: () => (nextPosition.x += -1 * SPEED),
@@ -78,23 +74,14 @@ window.addEventListener('keydown', (event: Event) => {
       ArrowRight: () => (nextPosition.x += SPEED),
     };
 
-    directions[code]?.call(null);
-    entityRect.position = nextPosition;
-  }
-});
+    directions[event.code]?.call(null);
 
-/**
- * @experimental
- * mouse click on entityRect to change color to random
- */
-window.addEventListener('click', (event: Event) => {
-  if (event instanceof MouseEvent) {
-    if (entityRect.visible && entityRect.isInBound(Cursor)) {
-      const r = Math.random() * 0xff;
-      const g = Math.random() * 0xff;
-      const b = Math.random() * 0xff;
+    TARGET.setPosition(nextPosition);
 
-      entityRect.setColor(`rgb(${r}, ${g}, ${b})`);
+    if (TARGET.collide(entityRect)) {
+      TARGET.setColor('blue');
+    } else {
+      TARGET.setColor('red');
     }
   }
 });
@@ -103,73 +90,78 @@ window.addEventListener('click', (event: Event) => {
  * @experimental
  * move entityMouseFollower on mousemove event
  */
-type Hitbox = {
-  x1: number;
-  x2: number;
-  y1: number;
-  y2: number;
-  width: number;
-  height: number;
-};
+function checkCollision() {
+  const { size } = entityMouseFollower;
 
-window.addEventListener('mousemove', (event: Event) => {
-  if (event instanceof MouseEvent) {
-    const { size } = entityMouseFollower;
+  const newPosition = {
+    x: Cursor.x - size.width / 2,
+    y: Cursor.y - size.height / 2,
+  };
 
-    function collideX(r1: Hitbox, r2: Hitbox) {
-      return r1.x1 < r2.x2 && r1.x2 > r2.x1;
-    }
-    function collideY(r1: Hitbox, r2: Hitbox) {
-      return r1.y2 > r2.y1 && r1.y1 < r2.y2;
-    }
+  const source = {
+    x1: newPosition!.x,
+    x2: newPosition!.x + size.width,
+    y1: newPosition!.y,
+    y2: newPosition!.y + size.height,
+    ...size,
+  };
 
-    entityMouseFollower.setPosition((prev) => {
-      const previousPosition = { ...prev };
+  const target = {
+    x1: entityRect.position!.x,
+    x2: entityRect.position!.x + entityRect.size.width,
+    y1: entityRect.position!.y,
+    y2: entityRect.position!.y + entityRect.size.height,
+    ...entityRect.size,
+  };
 
-      const newPosition = {
-        x: Cursor.x - size.width / 2,
-        y: Cursor.y - size.height / 2,
-      };
+  entityMouseFollower.setPosition((prev) => {
+    const previousPosition = { ...prev };
 
-      const source = {
-        x1: newPosition!.x,
-        x2: newPosition!.x + size.width,
-        y1: newPosition!.y,
-        y2: newPosition!.y + size.height,
-        ...size,
-      };
+    if (entityMouseFollower.collide(entityRect)) {
+      console.log('collision!', previousPosition.x, source.x1);
+      console.log(previousPosition.x + source.width, target.x1);
 
-      const target = {
-        x1: entityRect.position!.x,
-        x2: entityRect.position!.x + entityRect.size.width,
-        y1: entityRect.position!.y,
-        y2: entityRect.position!.y + entityRect.size.height,
-        ...entityRect.size,
-      };
+      // Collision from left
+      if (previousPosition.x + source.width <= target.x1) {
+        //newPosition.x = target.x1 - source.width;
 
-      if (collideX(source, target) && collideY(source, target)) {
-        // Collision from left
-        if (previousPosition.x + source.width <= target.x1) {
-          newPosition.x = target.x1 - source.width;
-        }
-
-        // Collision from right
-        if (previousPosition.x >= target.x2) {
-          newPosition.x = target.x2;
-        }
-
-        // Collision from top
-        if (previousPosition.y + source.height <= target.y1) {
-          newPosition.y = target.y1 - source.height;
-        }
-
-        // Collision from bottom
-        if (previousPosition.y >= target.y2) {
-          newPosition.y = target.y2;
-        }
+        entityRect.setPosition((prev) => ({
+          ...prev,
+          x: source.x2,
+        }));
       }
 
-      return newPosition;
-    });
-  }
-});
+      // Collision from right
+      if (previousPosition.x >= target.x2) {
+        //newPosition.x = target.x2;
+
+        entityRect.setPosition((prev) => ({
+          ...prev,
+          x: source.x1 - entityRect.size.width,
+        }));
+      }
+
+      // Collision from top
+      if (previousPosition.y + source.height <= target.y1) {
+        //newPosition.y = target.y1 - source.height;
+
+        entityRect.setPosition((prev) => ({
+          ...prev,
+          y: source.y2,
+        }));
+      }
+
+      // Collision from bottom
+      if (previousPosition.y >= target.y2) {
+        //newPosition.y = target.y2;
+
+        entityRect.setPosition((prev) => ({
+          ...prev,
+          y: source.y1 - entityRect.size.height,
+        }));
+      }
+    }
+
+    return newPosition;
+  });
+}
