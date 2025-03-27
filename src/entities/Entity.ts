@@ -23,15 +23,23 @@ class Entity {
     console.log('Entity initialized.');
   }
 
-  setSize(width: number, height: number) {
-    this.size = { width, height };
+  setSize(width: number, height?: number) {
+    this.size = {
+      width,
+      height: height ?? width,
+    };
+
     return this;
   }
 
-  setPosition(x: number, y: number) {
+  setPosition(position: Point | ((previous: Point) => Point)) {
+    if (typeof position == 'function') {
+      position = position(this.position);
+    }
+
     this.position = {
-      x: Math.floor(x),
-      y: Math.floor(y),
+      x: Math.floor(position.x),
+      y: Math.floor(position.y),
     };
 
     return this;
