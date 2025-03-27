@@ -12,7 +12,6 @@ const engine = new Engine(canvas, {
   VIEWPORT_WIDTH: window.innerWidth,
   VIEWPORT_HEIGHT: window.innerHeight,
   VSYNC: true,
-  FPS: 75,
   HIDE_CURSOR: true,
 });
 
@@ -22,8 +21,8 @@ const imageCursor = await loadImage('./diamond_sword.png');
 const entityFrameMeter = new FrameMeter(engine);
 const entityRect = new Entity(engine)
   .setColor('green')
-  .setSize(300, 150)
-  .setPosition(600, 300);
+  .setSize(400, 400)
+  .setPosition(window.innerWidth / 2 - 200, window.innerHeight / 2 - 200);
 
 const entityMouseFollower = new Entity(engine).setColor('red').setSize(50, 50);
 
@@ -103,11 +102,16 @@ window.addEventListener('click', (event: Event) => {
  */
 window.addEventListener('mousemove', (event: Event) => {
   if (event instanceof MouseEvent) {
-    const { size } = entityMouseFollower;
+    const { position: originalPosition, size } = entityMouseFollower;
 
     const newPosition = {
       x: Cursor.x - size.width / 2,
       y: Cursor.y - size.height / 2,
+    };
+
+    const direction = {
+      h: newPosition.x - entityMouseFollower.position!.x,
+      v: newPosition.y - entityMouseFollower.position!.y,
     };
 
     const source = {
@@ -115,14 +119,27 @@ window.addEventListener('mousemove', (event: Event) => {
       x2: newPosition!.x + size.width,
       y1: newPosition!.y,
       y2: newPosition!.y + size.height,
+      ...size,
     };
 
-    const target = {
+    const target: typeof source = {
       x1: entityRect.position!.x,
       x2: entityRect.position!.x + entityRect.size.width,
       y1: entityRect.position!.y,
       y2: entityRect.position!.y + entityRect.size.height,
+      ...entityRect.size,
     };
+
+    function collideX(r1: typeof source, r2: typeof target) {
+      return r1.x1 < r2.x2 && r1.x2 > r2.x1;
+    }
+    function collideY(r1: typeof source, r2: typeof target) {
+      return r1.y2 > r2.y1 && r1.y1 < r2.y2;
+    }
+
+    if (collideX(source, target) && collideY(source, target)) {
+      //console.log('colliding');
+    }
 
     entityMouseFollower.setPosition(newPosition.x, newPosition.y);
   }

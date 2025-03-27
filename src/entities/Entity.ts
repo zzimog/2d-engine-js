@@ -2,7 +2,7 @@ import Engine from '../Engine';
 
 class Entity {
   engine: Engine;
-  position?: Point;
+  position: Point;
   size: Size;
   color: string;
   visible: boolean;
@@ -10,12 +10,14 @@ class Entity {
   constructor(engine: Engine) {
     this.engine = engine;
 
+    this.position = { x: 0, y: 0 };
+
     this.size = {
       width: 0,
       height: 0,
     };
 
-    this.color = 'black';
+    this.color = 'transparent';
     this.visible = true;
 
     console.log('Entity initialized.');
@@ -27,8 +29,16 @@ class Entity {
   }
 
   setPosition(x: number, y: number) {
-    this.position = { x, y };
+    this.position = {
+      x: Math.floor(x),
+      y: Math.floor(y),
+    };
+
     return this;
+  }
+
+  getPosition() {
+    return this.position;
   }
 
   setColor(color: string) {

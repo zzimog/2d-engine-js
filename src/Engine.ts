@@ -52,6 +52,9 @@ class Engine {
   resize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
+
+    // disable images scaling antialiasing
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   render(callback: (renderInfo: EngineRenderInfo) => void) {
