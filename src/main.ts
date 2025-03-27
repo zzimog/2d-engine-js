@@ -29,18 +29,22 @@ const entityRect = new Entity(engine)
 const entityPlayer = new Entity(engine).setColor('red').setSize(50);
 */
 
-const box1 = new MovingBox(engine).setName("1");
-const box2 = new MovingBox(engine).setName("2");
-const box3 = new MovingBox(engine).setName("3");
+const boxes: Array<MovingBox> = [];
+const boxesCount = 5;
 
-box1.setColliders([box2, box3]);
-box2.setColliders([box1, box3]);
-box3.setColliders([box1, box2]);
+for (let i = 0; i < boxesCount; i++) {
+  const box = new MovingBox(engine).setName(`${i}`);
+  boxes.push(box);
+}
+
+for (const box of boxes) {
+  box.setColliders(boxes.filter((b) => b !== box));
+}
 
 engine.render((renderInfo: EngineRenderInfo) => {
-  box1.draw();
-  box2.draw();
-  box3.draw();
+  for (const box of boxes) {
+    box.draw();
+  }
 
   const { fps, currentFrame } = renderInfo;
   entityFrameMeter.update(fps, currentFrame);

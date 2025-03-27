@@ -1,16 +1,6 @@
+import { rand } from '../utils/math';
 import Engine from '../Engine';
 import Entity from './Entity';
-
-function rand(min: number, max: number) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function flipCoin(head: number, cross: number) {
-  return Math.random() < 0.5 ? head : cross;
-}
 
 class MovingBox extends Entity {
   name: string;
@@ -21,13 +11,13 @@ class MovingBox extends Entity {
   constructor(engine: Engine) {
     super(engine);
 
-    const randSpeed = flipCoin(-1, 1);
+    const randSpeed = rand(1, 5);
     this.speed_v = randSpeed;
     this.speed_h = randSpeed;
 
     this.size = {
-      width: rand(30, 80),
-      height: rand(30, 80),
+      width: rand(50, 200),
+      height: rand(50, 200),
     };
 
     this.position = {
@@ -37,6 +27,8 @@ class MovingBox extends Entity {
 
     this.name = 'box';
     this.colliders = [];
+
+    this.setColor('lime');
   }
 
   setName(name: string) {
@@ -47,6 +39,13 @@ class MovingBox extends Entity {
   setColliders(colliders: Array<MovingBox>) {
     this.colliders = colliders;
     return this;
+  }
+
+  getNextPosition() {
+    return {
+      x: this.position.x + this.speed_v,
+      y: this.position.y + this.speed_h,
+    };
   }
 
   draw() {
@@ -60,11 +59,32 @@ class MovingBox extends Entity {
       this.speed_h *= -1;
     }
 
-    this.setPosition((prev) => ({
-      x: prev.x + this.speed_v,
-      y: prev.y + this.speed_h,
-    }));
+    this.setPosition(() => {
+      const next = this.getNextPosition();
 
+      for (const box of this.colliders) {
+        if (this.willCollide(next, box)) {
+          const collisionFrom = this.relativePosition(box);
+
+          switch (collisionFrom) {
+            case 'TOP':
+            case 'BOTTOM':
+              this.speed_h *= -1;
+              box.speed_h *= -1;
+              break;
+            case 'RIGHT':
+            case 'LEFT':
+              this.speed_v *= -1;
+              box.speed_v *= -1;
+              break;
+          }
+        }
+      }
+
+      return this.getNextPosition();
+    });
+
+    /*
     for (const box of this.colliders) {
       if (this.isColliding(box)) {
         this.setColor('red');
@@ -73,6 +93,7 @@ class MovingBox extends Entity {
 
       this.setColor('lime');
     }
+    */
 
     super.draw();
 

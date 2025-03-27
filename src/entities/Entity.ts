@@ -107,12 +107,12 @@ class Entity {
     const pjs2 = entity.getProjections();
 
     return (
-      iif({
-        TOP: pjs1.y1 >= pjs2.y2,
-        RIGHT: pjs1.x2 <= pjs2.x1,
-        BOTTOM: pjs1.y2 <= pjs2.y1,
-        LEFT: pjs1.x1 >= pjs2.x2,
-      }) || false
+      iif([
+        [pjs1.y1 >= pjs2.y2, 'TOP'],
+        [pjs1.x2 <= pjs2.x1, 'RIGHT'],
+        [pjs1.y2 <= pjs2.y1, 'BOTTOM'],
+        [pjs1.x1 >= pjs2.x2, 'LEFT'],
+      ]) || false
     );
   }
 

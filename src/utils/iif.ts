@@ -1,20 +1,18 @@
-type Conditions = {
-  [key: string]: boolean;
-};
+type Conditions<T> = Array<[boolean, T]>;
 
 /**
  * Return object key corresponding to first verified condition
  *
  * @example
- * iif({
- *  0: a > b,
- *  1: b < c,
- *  2: a == c
- *  3: a == null
- * })
+ * iif([
+ *  [a > b, 0],
+ *  [b < c, 1],
+ *  [a == c, 2],
+ *  [a == null, 3]
+ * ])
  */
-function iif(conditions: Conditions) {
-  for (const [value, condition] of Object.entries(conditions)) {
+function iif<T>(conditions: Conditions<T>) {
+  for (const [condition, value] of conditions) {
     if (condition) {
       return value;
     }
