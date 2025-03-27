@@ -7,7 +7,6 @@ class FrameMeter extends Entity {
 
   constructor(engine: Engine) {
     super(engine);
-    this.setPosition(0, 0);
   }
 
   update(fps: string, currentFrame: number) {
