@@ -1,7 +1,13 @@
 import useClock from './utils/useClock';
 
+declare global {
+  interface Window {
+    ENGINE: Engine;
+  }
+}
+
 export type EngineRenderInfo = {
-  fps: string;
+  fps: number | string;
   currentFrame: number;
 };
 
@@ -18,6 +24,8 @@ class Engine {
   canvas: HTMLCanvasElement;
   ctx: Context2D;
   fps: number;
+  run: boolean;
+  drawFrame?: Function;
 
   constructor(canvas: HTMLCanvasElement, opts = {}) {
     const options = {
@@ -36,6 +44,7 @@ class Engine {
 
     this.ctx = ctx;
     this.fps = options.FPS;
+    this.run = true;
 
     this.setup();
   }
@@ -47,6 +56,8 @@ class Engine {
     if (this.options.HIDE_CURSOR) {
       this.canvas.style.cursor = 'none';
     }
+
+    window.ENGINE = this;
   }
 
   resize(width: number, height: number) {
@@ -63,17 +74,29 @@ class Engine {
     let fps = 0;
     let frameCount = 0;
 
+    this.drawFrame = () => {
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      callback({
+        fps: 0,
+        currentFrame: 0,
+      });
+    };
+
     // disable images scaling antialiasing
     this.ctx.imageSmoothingEnabled = false;
 
     const loop = () => {
-      // clear the screen before every render
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      if (this.run) {
+        // clear the screen before every render
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      callback({
-        fps: fps.toFixed(2),
-        currentFrame: frameCount,
-      } as EngineRenderInfo);
+        callback({
+          fps: fps.toFixed(2),
+          currentFrame: frameCount,
+        } as EngineRenderInfo);
+      }
 
       frameCount++;
 

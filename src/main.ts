@@ -1,14 +1,13 @@
 import Engine, { EngineRenderInfo } from './Engine';
-import Entity from './entities/Entity';
 import FrameMeter from './entities/FrameMeter';
+import MovingBox from './entities/MovingBox';
 import loadImage from './utils/loadImage';
 import useCursor from './utils/useCursor';
 
-const canvas = document.getElementById('mainframe')! as HTMLCanvasElement;
+const Canvas = document.getElementById('mainframe')! as HTMLCanvasElement;
+const Cursor = useCursor(Canvas);
 
-const Cursor = useCursor(canvas);
-
-const engine = new Engine(canvas, {
+const engine = new Engine(Canvas, {
   VIEWPORT_WIDTH: window.innerWidth,
   VIEWPORT_HEIGHT: window.innerHeight,
   VSYNC: true,
@@ -16,9 +15,9 @@ const engine = new Engine(canvas, {
 });
 
 const imageCursor = await loadImage('./diamond_sword.png');
-//const imageScream = await loadImage('./scream.jpg');
-
 const entityFrameMeter = new FrameMeter(engine);
+
+/*
 const entityRect = new Entity(engine)
   .setColor('green')
   .setSize(400)
@@ -27,15 +26,23 @@ const entityRect = new Entity(engine)
     y: window.innerHeight / 2 - 200,
   });
 
-const entityMouseFollower = new Entity(engine).setColor('red').setSize(50);
+const entityPlayer = new Entity(engine).setColor('red').setSize(50);
+*/
+
+const box1 = new MovingBox(engine).setName("1");
+const box2 = new MovingBox(engine).setName("2");
+const box3 = new MovingBox(engine).setName("3");
+
+box1.setColliders([box2, box3]);
+box2.setColliders([box1, box3]);
+box3.setColliders([box1, box2]);
 
 engine.render((renderInfo: EngineRenderInfo) => {
+  box1.draw();
+  box2.draw();
+  box3.draw();
+
   const { fps, currentFrame } = renderInfo;
-
-  entityRect.draw();
-
-  entityMouseFollower.draw();
-
   entityFrameMeter.update(fps, currentFrame);
   entityFrameMeter.draw();
 
@@ -50,23 +57,16 @@ engine.render((renderInfo: EngineRenderInfo) => {
   }
 });
 
-window.addEventListener('resize', () => {
-  const { innerWidth, innerHeight } = window;
-  engine.resize(innerWidth, innerHeight);
-});
-
 /**
  * @experimental
  * entityRect movement with arrow keys
  */
+/*
 window.addEventListener('keydown', (event: Event) => {
   if (event instanceof KeyboardEvent) {
-    const TARGET = entityMouseFollower;
     const SPEED = 10;
 
-    const previousPosition = { ...TARGET.position };
-    const nextPosition = { ...TARGET.position };
-
+    const nextPosition = { ...entityPlayer.position };
     const directions: Record<string, Function> = {
       ArrowUp: () => (nextPosition.y += -1 * SPEED),
       ArrowLeft: () => (nextPosition.x += -1 * SPEED),
@@ -76,92 +76,27 @@ window.addEventListener('keydown', (event: Event) => {
 
     directions[event.code]?.call(null);
 
-    TARGET.setPosition(nextPosition);
+    if (entityPlayer.willCollide(nextPosition, entityRect)) {
+      const pjs2 = entityRect.getProjections();
+      const collisionFrom = entityPlayer.relativePosition(entityRect);
 
-    if (TARGET.collide(entityRect)) {
-      TARGET.setColor('blue');
-    } else {
-      TARGET.setColor('red');
+      switch (collisionFrom) {
+        case 'TOP':
+          nextPosition.y = pjs2.y2;
+          break;
+        case 'RIGHT':
+          nextPosition.x = pjs2.x1 - entityPlayer.size.width;
+          break;
+        case 'BOTTOM':
+          nextPosition.y = pjs2.y1 - entityPlayer.size.height;
+          break;
+        case 'LEFT':
+          nextPosition.x = pjs2.x2;
+          break;
+      }
     }
+
+    entityPlayer.setPosition(nextPosition);
   }
 });
-
-/**
- * @experimental
- * move entityMouseFollower on mousemove event
- */
-function checkCollision() {
-  const { size } = entityMouseFollower;
-
-  const newPosition = {
-    x: Cursor.x - size.width / 2,
-    y: Cursor.y - size.height / 2,
-  };
-
-  const source = {
-    x1: newPosition!.x,
-    x2: newPosition!.x + size.width,
-    y1: newPosition!.y,
-    y2: newPosition!.y + size.height,
-    ...size,
-  };
-
-  const target = {
-    x1: entityRect.position!.x,
-    x2: entityRect.position!.x + entityRect.size.width,
-    y1: entityRect.position!.y,
-    y2: entityRect.position!.y + entityRect.size.height,
-    ...entityRect.size,
-  };
-
-  entityMouseFollower.setPosition((prev) => {
-    const previousPosition = { ...prev };
-
-    if (entityMouseFollower.collide(entityRect)) {
-      console.log('collision!', previousPosition.x, source.x1);
-      console.log(previousPosition.x + source.width, target.x1);
-
-      // Collision from left
-      if (previousPosition.x + source.width <= target.x1) {
-        //newPosition.x = target.x1 - source.width;
-
-        entityRect.setPosition((prev) => ({
-          ...prev,
-          x: source.x2,
-        }));
-      }
-
-      // Collision from right
-      if (previousPosition.x >= target.x2) {
-        //newPosition.x = target.x2;
-
-        entityRect.setPosition((prev) => ({
-          ...prev,
-          x: source.x1 - entityRect.size.width,
-        }));
-      }
-
-      // Collision from top
-      if (previousPosition.y + source.height <= target.y1) {
-        //newPosition.y = target.y1 - source.height;
-
-        entityRect.setPosition((prev) => ({
-          ...prev,
-          y: source.y2,
-        }));
-      }
-
-      // Collision from bottom
-      if (previousPosition.y >= target.y2) {
-        //newPosition.y = target.y2;
-
-        entityRect.setPosition((prev) => ({
-          ...prev,
-          y: source.y1 - entityRect.size.height,
-        }));
-      }
-    }
-
-    return newPosition;
-  });
-}
+*/

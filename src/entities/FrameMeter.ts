@@ -2,14 +2,14 @@ import Engine from '../Engine';
 import Entity from './Entity';
 
 class FrameMeter extends Entity {
-  fps?: string;
+  fps?: number | string;
   currentFrame?: number;
 
   constructor(engine: Engine) {
     super(engine);
   }
 
-  update(fps: string, currentFrame: number) {
+  update(fps: number | string, currentFrame: number) {
     this.fps = fps;
     this.currentFrame = currentFrame;
   }

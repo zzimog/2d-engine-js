@@ -1,4 +1,5 @@
 import Engine from '../Engine';
+import iif from '../utils/iif';
 
 class Entity {
   engine: Engine;
@@ -51,8 +52,8 @@ class Entity {
     return this;
   }
 
-  get projections() {
-    const { x, y } = this.position;
+  getProjections(atPosition?: Position) {
+    const { x, y } = atPosition || this.position;
     const { width, height } = this.size;
 
     return {
@@ -61,24 +62,6 @@ class Entity {
       y1: y,
       y2: y + height,
     };
-  }
-
-  collideX(target: Entity) {
-    const h1 = this.projections;
-    const h2 = target.projections;
-
-    return h1.x1 < h2.x2 && h1.x2 > h2.x1;
-  }
-
-  collideY(target: Entity) {
-    const h1 = this.projections;
-    const h2 = target.projections;
-
-    return h1.y2 > h2.y1 && h1.y1 < h2.y2;
-  }
-
-  collide(target: Entity) {
-    return this.collideX(target) && this.collideY(target);
   }
 
   draw() {
@@ -91,6 +74,45 @@ class Entity {
       this.position.y,
       this.size.width,
       this.size.height
+    );
+  }
+
+  /**
+   * @experimental
+   */
+  willCollide(position: Position, entity: Entity) {
+    const pjs1 = this.getProjections(position);
+    const pjs2 = entity.getProjections();
+
+    return (
+      pjs1.x1 < pjs2.x2 &&
+      pjs1.x2 > pjs2.x1 &&
+      pjs1.y2 > pjs2.y1 &&
+      pjs1.y1 < pjs2.y2
+    );
+  }
+
+  /**
+   * @experimental
+   */
+  isColliding(entity: Entity) {
+    return this.willCollide(this.position, entity);
+  }
+
+  /**
+   * @experimental
+   */
+  relativePosition(entity: Entity) {
+    const pjs1 = this.getProjections();
+    const pjs2 = entity.getProjections();
+
+    return (
+      iif({
+        TOP: pjs1.y1 >= pjs2.y2,
+        RIGHT: pjs1.x2 <= pjs2.x1,
+        BOTTOM: pjs1.y2 <= pjs2.y1,
+        LEFT: pjs1.x1 >= pjs2.x2,
+      }) || false
     );
   }
 
