@@ -17,6 +17,7 @@ const DEFAULT_OPTIONS = {
   VSYNC: false,
   FPS: 60,
   HIDE_CURSOR: false,
+  IMAGE_SMOOTHING: false,
 };
 
 function getContext(canvas: HTMLCanvasElement) {
@@ -33,8 +34,9 @@ class Engine {
   options: typeof DEFAULT_OPTIONS;
   canvas: HTMLCanvasElement;
   ctx: Context2D;
-  fps: number;
   run: boolean;
+  fps: number;
+  currentFrame: number;
   drawFrame?: Function;
 
   constructor(canvas: HTMLCanvasElement, opts = {}) {
@@ -45,9 +47,9 @@ class Engine {
 
     this.canvas = canvas;
     this.ctx = getContext(this.canvas);
-
-    this.fps = this.options.FPS;
     this.run = true;
+    this.fps = 0;
+    this.currentFrame = -1;
 
     this.setup();
   }
@@ -66,46 +68,34 @@ class Engine {
   resize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
-
-    // disable images scaling antialiasing
-    this.ctx.imageSmoothingEnabled = false;
   }
 
   render(callback: (renderInfo: EngineRenderInfo) => void) {
     const fpsTimer = useClock();
 
-    let fps = 0;
-    let frameCount = 0;
+    this.fps = 0;
+    this.currentFrame = 0;
 
     this.drawFrame = () => {
-      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.imageSmoothingEnabled = this.options.IMAGE_SMOOTHING;
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       callback({
-        fps: 0,
-        currentFrame: 0,
+        fps: this.fps.toFixed(2),
+        currentFrame: this.currentFrame,
       });
+
+      this.currentFrame++;
     };
 
-    // disable images scaling antialiasing
-    this.ctx.imageSmoothingEnabled = false;
-
     const loop = () => {
-      if (this.run) {
-        // clear the screen before every render
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        callback({
-          fps: fps.toFixed(2),
-          currentFrame: frameCount,
-        } as EngineRenderInfo);
+      if (this.drawFrame && this.run) {
+        this.drawFrame();
       }
 
-      frameCount++;
-
       if (fpsTimer.interval > 1000) {
-        fps = (frameCount / fpsTimer.delta()) * 1000;
-        frameCount = 0;
+        this.fps = (this.currentFrame / fpsTimer.delta()) * 1000;
+        this.currentFrame = 0;
       }
 
       if (this.options.VSYNC) {
