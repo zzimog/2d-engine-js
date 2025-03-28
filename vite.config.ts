@@ -5,4 +5,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
+  server: {
+    open: true,
+  },
 });
