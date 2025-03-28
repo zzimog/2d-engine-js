@@ -4,16 +4,16 @@ import Entity from './Entity';
 
 class MovingBox extends Entity {
   name: string;
-  speed_v: number;
-  speed_h: number;
+  speed_y: number;
+  speed_x: number;
   colliders: Array<MovingBox>;
 
   constructor(engine: Engine) {
     super(engine);
 
     const randSpeed = rand(1, 5);
-    this.speed_v = randSpeed;
-    this.speed_h = randSpeed;
+    this.speed_y = randSpeed;
+    this.speed_x = randSpeed;
 
     this.size = {
       width: rand(50, 200),
@@ -43,22 +43,16 @@ class MovingBox extends Entity {
 
   getNextPosition() {
     return {
-      x: this.position.x + this.speed_v,
-      y: this.position.y + this.speed_h,
+      x: this.position.x + this.speed_x,
+      y: this.position.y + this.speed_y,
     };
   }
 
+  onCollision(entity: MovingBox) {
+    console.log(`${this.name} got hit by ${entity.name}`, entity);
+  }
+
   draw() {
-    const pjs = this.getProjections();
-
-    if (pjs.x1 <= 0 || pjs.x2 >= window.innerWidth) {
-      this.speed_v *= -1;
-    }
-
-    if (pjs.y1 <= 0 || pjs.y2 >= window.innerHeight) {
-      this.speed_h *= -1;
-    }
-
     this.setPosition(() => {
       const next = this.getNextPosition();
 
@@ -69,16 +63,39 @@ class MovingBox extends Entity {
           switch (collisionFrom) {
             case 'TOP':
             case 'BOTTOM':
-              this.speed_h *= -1;
-              box.speed_h *= -1;
+              this.speed_y *= -1;
+              box.speed_y = -1 * this.speed_y;
               break;
             case 'RIGHT':
             case 'LEFT':
-              this.speed_v *= -1;
-              box.speed_v *= -1;
+              this.speed_x *= -1;
+              box.speed_x = -1 * this.speed_x;
               break;
           }
+
+          box.onCollision(this);
         }
+      }
+
+      const pjs = this.getProjections(this.getNextPosition());
+      const speed_x_abs = Math.abs(this.speed_x);
+      const speed_y_abs = Math.abs(this.speed_y);
+      const { canvas } = this.engine;
+
+      if (pjs.x1 <= 0 && pjs.x2 < canvas.width) {
+        this.speed_x = speed_x_abs;
+        this.position.x = 0;
+      } else if (pjs.x1 > 0 && pjs.x2 > canvas.width) {
+        this.speed_x = -1 * speed_x_abs;
+        this.position.x = canvas.width - this.size.width;
+      }
+
+      if (pjs.y1 <= 0 && pjs.y2 < canvas.height) {
+        this.speed_y = speed_y_abs;
+        this.position.y = 0;
+      } else if (pjs.y1 > 0 && pjs.y2 > canvas.height) {
+        this.speed_y = -1 * speed_y_abs;
+        this.position.y = canvas.height - this.size.height;
       }
 
       return this.getNextPosition();

@@ -14,7 +14,7 @@ type Conditions<T> = Array<[boolean, T]>;
 function iif<T>(conditions: Conditions<T>) {
   for (const [condition, value] of conditions) {
     if (condition) {
-      return value;
+      return typeof value === 'function' ? value() : value;
     }
   }
 
