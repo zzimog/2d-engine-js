@@ -19,6 +19,16 @@ const DEFAULT_OPTIONS = {
   HIDE_CURSOR: false,
 };
 
+function getContext(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d');
+
+  if (ctx === null) {
+    throw new Error('Cannot get 2D context from canvas.');
+  }
+
+  return ctx as Context2D;
+}
+
 class Engine {
   options: typeof DEFAULT_OPTIONS;
   canvas: HTMLCanvasElement;
@@ -28,22 +38,15 @@ class Engine {
   drawFrame?: Function;
 
   constructor(canvas: HTMLCanvasElement, opts = {}) {
-    const options = {
+    this.options = {
       ...DEFAULT_OPTIONS,
       ...opts,
     };
 
-    this.options = options;
     this.canvas = canvas;
+    this.ctx = getContext(this.canvas);
 
-    const ctx = canvas.getContext('2d');
-
-    if (ctx === null) {
-      throw new Error('Cannot get 2D context from canvas.');
-    }
-
-    this.ctx = ctx;
-    this.fps = options.FPS;
+    this.fps = this.options.FPS;
     this.run = true;
 
     this.setup();
