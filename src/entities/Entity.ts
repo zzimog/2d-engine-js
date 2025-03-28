@@ -1,5 +1,13 @@
-import Engine from '../Engine';
+import Direction from '../utils/directions';
 import iif from '../utils/iif';
+import Engine from '../Engine';
+
+type EntityProjection = {
+  x1: number;
+  x2: number;
+  y1: number;
+  y2: number;
+};
 
 class Entity {
   engine: Engine;
@@ -52,7 +60,7 @@ class Entity {
     return this;
   }
 
-  getProjections(atPosition?: Position) {
+  getProjections(atPosition?: Position): EntityProjection {
     const { x, y } = atPosition || this.position;
     const { width, height } = this.size;
 
@@ -77,9 +85,6 @@ class Entity {
     );
   }
 
-  /**
-   * @experimental
-   */
   willCollide(position: Position, entity: Entity) {
     const pjs1 = this.getProjections(position);
     const pjs2 = entity.getProjections();
@@ -92,35 +97,25 @@ class Entity {
     );
   }
 
-  /**
-   * @experimental
-   */
   isColliding(entity: Entity) {
     return this.willCollide(this.position, entity);
   }
 
-  /**
-   * @experimental
-   */
-  relativePosition(entity: Entity) {
+  relativePosition(entity: Entity): Direction | false {
     const pjs1 = this.getProjections();
     const pjs2 = entity.getProjections();
 
     return (
       iif([
-        [pjs1.y1 >= pjs2.y2, 'TOP'],
-        [pjs1.x2 <= pjs2.x1, 'RIGHT'],
-        [pjs1.y2 <= pjs2.y1, 'BOTTOM'],
-        [pjs1.x1 >= pjs2.x2, 'LEFT'],
+        [pjs1.y1 >= pjs2.y2, Direction.TOP],
+        [pjs1.x2 <= pjs2.x1, Direction.RIGHT],
+        [pjs1.y2 <= pjs2.y1, Direction.BOTTOM],
+        [pjs1.x1 >= pjs2.x2, Direction.LEFT],
       ]) || false
     );
   }
 
-  /**
-   * @experimental
-   * check if given point is inside Entity area
-   */
-  isInBound(point: Point) {
+  contains(point: Point) {
     return (
       point.x >= this.position.x &&
       point.x < this.position.x + this.size.width &&

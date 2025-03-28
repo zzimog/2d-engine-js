@@ -1,3 +1,4 @@
+import { Direction, swapDirection } from '../utils/directions';
 import { flipCoin, rand } from '../utils/math';
 import Engine from '../Engine';
 import Entity from './Entity';
@@ -11,24 +12,24 @@ class MovingBox extends Entity {
   constructor(engine: Engine) {
     super(engine);
 
-    const randSpeed = rand(1, 5);
-    this.speed_y = randSpeed * flipCoin(-1, 1);
-    this.speed_x = randSpeed * flipCoin(-1, 1);
+    this.color = 'lime';
+    this.name = 'box';
+    this.colliders = [];
 
     this.size = {
       width: rand(50, 200),
       height: rand(50, 200),
     };
 
+    const randSpeed = rand(1, 5);
+    this.speed_y = randSpeed * flipCoin(-1, 1);
+    this.speed_x = randSpeed * flipCoin(-1, 1);
+
+    const { canvas } = this.engine;
     this.position = {
-      x: rand(10, window.innerWidth - this.size.width - 10),
-      y: rand(10, window.innerHeight - this.size.height - 10),
+      x: rand(10, canvas.width - this.size.width - 10),
+      y: rand(10, canvas.height - this.size.height - 10),
     };
-
-    this.name = 'box';
-    this.colliders = [];
-
-    this.setColor('lime');
   }
 
   setName(name: string) {
@@ -41,84 +42,95 @@ class MovingBox extends Entity {
     return this;
   }
 
-  getNextPosition() {
-    return {
-      x: this.position.x + this.speed_x,
-      y: this.position.y + this.speed_y,
-    };
-  }
+  onCollision(from: Direction, entity: MovingBox) {
+    console.log(`${this.name} got hit by ${entity.name} from ${from}`, entity);
 
-  onCollision(entity: MovingBox) {
-    console.log(`${this.name} got hit by ${entity.name}`, entity);
-  }
-
-  draw() {
-    this.setPosition(() => {
-      const next = this.getNextPosition();
-
-      for (const entity of this.colliders) {
-        if (this.willCollide(next, entity)) {
-          const at = this.relativePosition(entity);
-          const pjs2 = entity.getProjections();
-
-          switch (at) {
-            case 'TOP':
-              this.speed_y *= -1;
-              next.y = pjs2.y2;
-              break;
-            case 'BOTTOM':
-              this.speed_y *= -1;
-              next.y = pjs2.y1 - this.size.height;
-              break;
-            case 'RIGHT':
-              this.speed_x *= -1;
-              next.x = pjs2.x1 - this.size.width;
-              break;
-            case 'LEFT':
-              this.speed_x *= -1;
-              next.x = pjs2.x2;
-              break;
-          }
-
-          entity.onCollision(this);
-        }
-      }
-
-      const nextPjs = this.getProjections(next);
-      const speed_x_abs = Math.abs(this.speed_x);
-      const speed_y_abs = Math.abs(this.speed_y);
-      const { canvas } = this.engine;
-
-      if (nextPjs.x1 <= 0 && nextPjs.x2 < canvas.width) {
-        this.speed_x = speed_x_abs;
-        next.x = 0;
-      } else if (nextPjs.x1 > 0 && nextPjs.x2 > canvas.width) {
-        this.speed_x = -1 * speed_x_abs;
-        next.x = canvas.width - this.size.width;
-      }
-
-      if (nextPjs.y1 <= 0 && nextPjs.y2 < canvas.height) {
-        this.speed_y = speed_y_abs;
-        next.y = 0;
-      } else if (nextPjs.y1 > 0 && nextPjs.y2 > canvas.height) {
-        this.speed_y = -1 * speed_y_abs;
-        next.y = canvas.height - this.size.height;
-      }
-
-      return next;
-    });
-
-    /*
-    for (const box of this.colliders) {
-      if (this.isColliding(box)) {
-        this.setColor('red');
+    switch (from) {
+      case Direction.TOP:
+      case Direction.BOTTOM: {
+        this.speed_y = -1 * entity.speed_y;
         break;
       }
 
-      this.setColor('lime');
+      case Direction.LEFT:
+      case Direction.RIGHT: {
+        this.speed_x = -1 * entity.speed_x;
+        break;
+      }
     }
-    */
+  }
 
+  update() {
+    const nextPosition = {
+      x: this.position.x + this.speed_x,
+      y: this.position.y + this.speed_y,
+    };
+
+    for (const entity of this.colliders) {
+      if (this.willCollide(nextPosition, entity)) {
+        const at = this.relativePosition(entity);
+        const entityHitbox = entity.getProjections();
+
+        if (at === false) {
+          continue;
+        }
+
+        switch (at) {
+          case Direction.TOP: {
+            this.speed_y = entity.speed_y;
+            nextPosition.y = entityHitbox.y2;
+            break;
+          }
+
+          case Direction.BOTTOM: {
+            this.speed_y = entity.speed_y;
+            nextPosition.y = entityHitbox.y1 - this.size.height;
+            break;
+          }
+
+          case Direction.RIGHT: {
+            this.speed_x = entity.speed_x;
+            nextPosition.x = entityHitbox.x1 - this.size.width;
+            break;
+          }
+
+          case Direction.LEFT: {
+            this.speed_x = entity.speed_x;
+            nextPosition.x = entityHitbox.x2;
+            break;
+          }
+        }
+
+        entity.onCollision(swapDirection(at), this);
+      }
+    }
+
+    const nextPjs = this.getProjections(nextPosition);
+    const speed_x_abs = Math.abs(this.speed_x);
+    const speed_y_abs = Math.abs(this.speed_y);
+    const { canvas } = this.engine;
+
+    if (nextPjs.x1 < 0 && nextPjs.x2 < canvas.width) {
+      this.speed_x = speed_x_abs;
+      nextPosition.x = 0;
+    } else if (nextPjs.x1 > 0 && nextPjs.x2 > canvas.width) {
+      this.speed_x = -1 * speed_x_abs;
+      nextPosition.x = canvas.width - this.size.width;
+    }
+
+    if (nextPjs.y1 < 0 && nextPjs.y2 < canvas.height) {
+      this.speed_y = speed_y_abs;
+      nextPosition.y = 0;
+    } else if (nextPjs.y1 > 0 && nextPjs.y2 > canvas.height) {
+      this.speed_y = -1 * speed_y_abs;
+      nextPosition.y = canvas.height - this.size.height;
+    }
+
+    this.setPosition(nextPosition);
+  }
+
+  draw() {
+    this.update();
     super.draw();
 
     this.engine.ctx.fillStyle = 'black';
