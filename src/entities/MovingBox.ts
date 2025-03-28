@@ -1,4 +1,4 @@
-import { rand } from '../utils/math';
+import { flipCoin, rand } from '../utils/math';
 import Engine from '../Engine';
 import Entity from './Entity';
 
@@ -12,8 +12,8 @@ class MovingBox extends Entity {
     super(engine);
 
     const randSpeed = rand(1, 5);
-    this.speed_y = randSpeed;
-    this.speed_x = randSpeed;
+    this.speed_y = randSpeed * flipCoin(-1, 1);
+    this.speed_x = randSpeed * flipCoin(-1, 1);
 
     this.size = {
       width: rand(50, 200),
@@ -56,49 +56,56 @@ class MovingBox extends Entity {
     this.setPosition(() => {
       const next = this.getNextPosition();
 
-      for (const box of this.colliders) {
-        if (this.willCollide(next, box)) {
-          const collisionFrom = this.relativePosition(box);
+      for (const entity of this.colliders) {
+        if (this.willCollide(next, entity)) {
+          const at = this.relativePosition(entity);
+          const pjs2 = entity.getProjections();
 
-          switch (collisionFrom) {
+          switch (at) {
             case 'TOP':
+              this.speed_y *= -1;
+              next.y = pjs2.y2;
+              break;
             case 'BOTTOM':
               this.speed_y *= -1;
-              box.speed_y = -1 * this.speed_y;
+              next.y = pjs2.y1 - this.size.height;
               break;
             case 'RIGHT':
+              this.speed_x *= -1;
+              next.x = pjs2.x1 - this.size.width;
+              break;
             case 'LEFT':
               this.speed_x *= -1;
-              box.speed_x = -1 * this.speed_x;
+              next.x = pjs2.x2;
               break;
           }
 
-          box.onCollision(this);
+          entity.onCollision(this);
         }
       }
 
-      const pjs = this.getProjections(this.getNextPosition());
+      const nextPjs = this.getProjections(next);
       const speed_x_abs = Math.abs(this.speed_x);
       const speed_y_abs = Math.abs(this.speed_y);
       const { canvas } = this.engine;
 
-      if (pjs.x1 <= 0 && pjs.x2 < canvas.width) {
+      if (nextPjs.x1 <= 0 && nextPjs.x2 < canvas.width) {
         this.speed_x = speed_x_abs;
-        this.position.x = 0;
-      } else if (pjs.x1 > 0 && pjs.x2 > canvas.width) {
+        next.x = 0;
+      } else if (nextPjs.x1 > 0 && nextPjs.x2 > canvas.width) {
         this.speed_x = -1 * speed_x_abs;
-        this.position.x = canvas.width - this.size.width;
+        next.x = canvas.width - this.size.width;
       }
 
-      if (pjs.y1 <= 0 && pjs.y2 < canvas.height) {
+      if (nextPjs.y1 <= 0 && nextPjs.y2 < canvas.height) {
         this.speed_y = speed_y_abs;
-        this.position.y = 0;
-      } else if (pjs.y1 > 0 && pjs.y2 > canvas.height) {
+        next.y = 0;
+      } else if (nextPjs.y1 > 0 && nextPjs.y2 > canvas.height) {
         this.speed_y = -1 * speed_y_abs;
-        this.position.y = canvas.height - this.size.height;
+        next.y = canvas.height - this.size.height;
       }
 
-      return this.getNextPosition();
+      return next;
     });
 
     /*
