@@ -7,10 +7,10 @@ import { clamp } from './utils/math';
 import useCursor from './utils/useCursor';
 import useKeyboard from './utils/useKeyboard';
 
-const Keyboard = useKeyboard();
-
 const Canvas = document.getElementById('mainframe')! as HTMLCanvasElement;
+
 const Cursor = useCursor(Canvas);
+const Keyboard = useKeyboard();
 
 const engine = new Engine(Canvas, {
   VIEWPORT_WIDTH: window.innerWidth,

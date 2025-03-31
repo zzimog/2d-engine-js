@@ -43,8 +43,6 @@ class MovingBox extends Entity {
   }
 
   onCollision(from: Direction, entity: MovingBox) {
-    console.log(`${this.name} got hit by ${entity.name} from ${from}`, entity);
-
     switch (from) {
       case Direction.TOP:
       case Direction.BOTTOM: {

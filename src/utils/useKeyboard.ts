@@ -9,6 +9,10 @@ function useKeyboard() {
     keyset.delete(event.code);
   });
 
+  for (const type of ['blur', 'contextmenu']) {
+    window.addEventListener(type, () => keyset.clear());
+  }
+
   return {
     keyPressed(code: string) {
       return keyset.has(code) ? 1 : 0;

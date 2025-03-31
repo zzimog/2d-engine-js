@@ -13,7 +13,7 @@ class Entity {
   engine: Engine;
   position: Position;
   size: Size;
-  color: string;
+  color?: string;
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -28,23 +28,32 @@ class Entity {
       y: 0,
     };
 
-    this.color = 'transparent';
-
     console.log('Entity initialized.');
   }
 
-  setSize(width: number, height?: number) {
-    this.size = {
-      width,
-      height: height ?? width,
-    };
+  setSize(size: number): Entity;
+  setSize(size: Size): Entity;
+  setSize(size: (prev: Size) => Size): Entity;
+  setSize(size: any) {
+    if (typeof size === 'number') {
+      size = {
+        width: size,
+        height: size,
+      };
+    } else if (typeof size === 'function') {
+      size = size({ ...this.size });
+    }
+
+    this.size = { ...size };
 
     return this;
   }
 
-  setPosition(position: Point | ((previous: Point) => Point)) {
+  setPosition(position: (prev: Point) => Point): Entity;
+  setPosition(position: Point): Entity;
+  setPosition(position: any) {
     if (typeof position == 'function') {
-      position = position(this.position);
+      position = position({ ...this.position });
     }
 
     this.position = {
@@ -55,8 +64,15 @@ class Entity {
     return this;
   }
 
-  setColor(color: string) {
+  setColor(color: string): Entity;
+  setColor(color: (prev?: string) => string): Entity;
+  setColor(color: any) {
+    if (typeof color == 'function') {
+      color = color(this.color);
+    }
+
     this.color = color;
+
     return this;
   }
 
@@ -75,7 +91,9 @@ class Entity {
   draw() {
     const ctx = this.engine.ctx;
 
-    ctx.fillStyle = this.color;
+    if (this.color) {
+      ctx.fillStyle = this.color;
+    }
 
     ctx.fillRect(
       this.position.x,
