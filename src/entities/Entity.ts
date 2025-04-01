@@ -31,10 +31,7 @@ class Entity {
     console.log('Entity initialized.');
   }
 
-  setSize(size: number): Entity;
-  setSize(size: Size): Entity;
-  setSize(size: (prev: Size) => Size): Entity;
-  setSize(size: any) {
+  setSize(size: number | Size | ((prev: Size) => Size)) {
     if (typeof size === 'number') {
       size = {
         width: size,
@@ -49,9 +46,7 @@ class Entity {
     return this;
   }
 
-  setPosition(position: (prev: Point) => Point): Entity;
-  setPosition(position: Point): Entity;
-  setPosition(position: any) {
+  setPosition(position: Point | ((prev: Point) => Point)) {
     if (typeof position == 'function') {
       position = position({ ...this.position });
     }
@@ -64,9 +59,7 @@ class Entity {
     return this;
   }
 
-  setColor(color: string): Entity;
-  setColor(color: (prev?: string) => string): Entity;
-  setColor(color: any) {
+  setColor(color: string | ((prev?: string) => string)) {
     if (typeof color == 'function') {
       color = color(this.color);
     }
@@ -76,8 +69,8 @@ class Entity {
     return this;
   }
 
-  getProjections(atPosition?: Position): EntityProjection {
-    const { x, y } = atPosition || this.position;
+  getProjections(at?: Position): EntityProjection {
+    const { x, y } = at || this.position;
     const { width, height } = this.size;
 
     return {

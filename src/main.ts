@@ -62,6 +62,14 @@ engine.render((renderInfo: EngineRenderInfo) => {
     box.draw();
   }
 
+  if (Keyboard.keyDown('KeyP')) {
+    console.log('key P down');
+  }
+
+  if (Keyboard.keyUp('KeyL')) {
+    console.log('key L released');
+  }
+
   const speed = 5;
   const vx = Keyboard.keyPressed('KeyD') - Keyboard.keyPressed('KeyA');
   const vy = Keyboard.keyPressed('KeyS') - Keyboard.keyPressed('KeyW');

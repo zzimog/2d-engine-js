@@ -6,6 +6,8 @@ declare global {
   }
 }
 
+export type EngineContext = CanvasRenderingContext2D;
+
 export type EngineRenderInfo = {
   fps: number | string;
   currentFrame: number;
@@ -27,13 +29,13 @@ function getContext(canvas: HTMLCanvasElement) {
     throw new Error('Cannot get 2D context from canvas.');
   }
 
-  return ctx as Context2D;
+  return ctx as EngineContext;
 }
 
 class Engine {
   options: typeof DEFAULT_OPTIONS;
   canvas: HTMLCanvasElement;
-  ctx: Context2D;
+  ctx: EngineContext;
   run: boolean;
   fps: number;
   currentFrame: number;
