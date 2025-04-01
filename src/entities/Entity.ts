@@ -1,13 +1,7 @@
 import Direction from '../utils/directions';
 import iif from '../utils/iif';
 import Engine from '../Engine';
-
-type EntityProjection = {
-  x1: number;
-  x2: number;
-  y1: number;
-  y2: number;
-};
+import type Point from '../geometry/Point';
 
 class Entity {
   engine: Engine;
@@ -46,7 +40,7 @@ class Entity {
     return this;
   }
 
-  setPosition(position: Point | ((prev: Point) => Point)) {
+  setPosition(position: Position | ((prev: Position) => Position)) {
     if (typeof position == 'function') {
       position = position({ ...this.position });
     }
@@ -69,7 +63,7 @@ class Entity {
     return this;
   }
 
-  getProjections(at?: Position): EntityProjection {
+  getProjections(at?: Position): Projection {
     const { x, y } = at || this.position;
     const { width, height } = this.size;
 
